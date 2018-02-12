@@ -1,0 +1,23 @@
+{
+  "name": "oliverde8/page-compose",
+  "type": "library",
+  "description": "A library allowing to make the composition of pages configurable.",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Oliver de Cramer",
+      "homepage": "http://oliver-decramer.com"
+    }
+  ],
+  "require": {
+    "php": ">=7.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "6.5.*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Oliverde8\\PageCompose\\": "src/Oliverde8/PageCompose"
+    }
+  }
+}
