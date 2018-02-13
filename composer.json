@@ -13,6 +13,7 @@
     "php": ">=7.0",
     "oliverde8/associative-array-simplified" : "1.0.*",
     "symfony/property-access" : "3.4.*",
+    "psr/simple-cache" : "*",
     "psr/cache" : "*"
   },
   "require-dev": {
