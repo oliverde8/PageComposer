@@ -10,7 +10,10 @@
     }
   ],
   "require": {
-    "php": ">=7.0"
+    "php": ">=7.0",
+    "oliverde8/associative-array-simplified" : "1.0.*",
+    "symfony/property-access" : "3.4.*",
+    "psr/cache" : "*"
   },
   "require-dev": {
     "phpunit/phpunit": "6.5.*"
@@ -18,6 +21,11 @@
   "autoload": {
     "psr-4": {
       "Oliverde8\\PageCompose\\": "src/Oliverde8/PageCompose"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Oliverde8\\PageCompose\\Tests\\": "tests/Oliverde8/PageCompose/Tests"
     }
   }
 }
