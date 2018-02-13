@@ -6,7 +6,7 @@ php:
   - nightly
 
 before_script:
-    - composer install --prefer-source
+    - composer update --prefer-source
 
 script:
     - ./vendor/bin/phpunit --coverage-clover=coverage.clover

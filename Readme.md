@@ -6,9 +6,13 @@ to overide the content of a page.
 The system was inspired by the Layout's of Magento & from the form compose of Akeneo. 
 It is designed to endup being used with eXpansion the Maniaplanet server controller.
 
+[![Build Status](https://travis-ci.org/oliverde8/PageComposer.svg?branch=master)](https://travis-ci.org/oliverde8/PageComposer)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/oliverde8/PageComposer/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/oliverde8/PageComposer/?branch=master)
+[![Code Coverage](https://scrutinizer-ci.com/g/oliverde8/PageComposer/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/oliverde8/PageComposer/?branch=master)
+
 ## Why
 
-If you start a symfony project using twig and have multiple bundles overriding your your templates it's is 
+If you start a symfony project using twig and have multiple bundles overriding your templates it's is 
 going to become a nightmare to manage. 
 
 For example, you wish to display a certain content on the left sidebar of your page. The CmsBundle displays 
@@ -23,7 +27,7 @@ The idea of this library is to offer a common ground for configuration based pag
 A Symfony bundle that will be coded later should make it easier to understand. 
 
 This library is not meant to be used on simple websites, it's meant to be used for CMS and other softwares that needs
-to have easily overridable interfaces.
+to have easily overridable interfaces. This first vesrion is designed for eXpansion which doesen't uses html code. 
 
 ## Simple usage exemple 
 
@@ -38,7 +42,7 @@ $uiComponents->registerUiComponent('text', new \Oliverde8\PageCompose\UiComponen
 ```
 
 Here we have defined a list and a text component. The text component can display a simple text, while the list 
-component displayes a html list.
+component displays a html list.
 
 **Step 2** 
 Let's define the content of `myPage`
@@ -60,7 +64,7 @@ $layout = [
             'text' => 'My Test Content 1' // The text to display.
         ]
     ],
-    'myPage/content/element2' => [ // A second elemnt like the first one.
+    'myPage/content/element2' => [ // A second element like the first one.
         'parent' => 'myPage/content',
         'component' => 'text',
         'config' => [
@@ -91,6 +95,9 @@ foreach ($blockDefinitions->getPageBlocks('myPage', []) as $block) {
 }
 ```
 
+As you can see display doesen't display it retuns a string. That's because the system intends to be generic. The way
+sub children should be handle depends on the usage. My primary usage being to append various objects for eXpansion.
+
 ## What else 
 
 ### Extending blocks
@@ -107,6 +114,13 @@ $layout = [
             'class' => ['ul' => ['super_parent_class'], 'li' => ['super_li_class']]
         ]
     ],
+    'abstract/content/sub' => [
+        'component' => 'text',
+        'parent'  => 'abstract/content',
+        'config' => [          
+            'text' => 'my Text'
+        ],
+    ],
     'myPage/content' => [
         'parent' => 'myPage',  
         'extends' => 'abstract/content'
@@ -122,6 +136,9 @@ $layout = [
     //...
 ];
 ```
+
+When you extend you also get the sub elements of the element you extend, in this case `mySecondPage/content` 
+has `abstract/content/sub` as a sub block.
 
 ### Global configs. 
 
@@ -156,7 +173,7 @@ $layout = [
 ];
 ````
 
-Global configs can also be set when calling for the display.
+Global configs can also be set when calling for the display. 
 
 **Exemple**
 ```php
@@ -166,16 +183,59 @@ foreach ($blockDefinitions->getPageBlocks('myPage', ['text' => 'My Global text']
 }
 ```
 
+### Defining aliases. 
+
+**Exemple**
+```php
+<?php
+$layout = [
+    'myPage/content' => [
+        'parent' => 'myPage',  
+        'component' => 'list', 
+        'config' => [          
+            'class' => ['ul' => ['super_parent_class'], 'li' => ['super_li_class']]
+        ],
+
+    ],
+    'myPage/content/element1' => [
+        'alias' => "element1",
+        'parent' => 'myPage/content',
+        'component' => 'text',       
+        'config' => [
+            'text' => 'My Test Content from parent'
+        ]
+    ],
+    'myPage/content/element2' => [
+        'alias' => "element1",
+        'parent' => 'myPage/content',
+        'component' => 'text',
+        'config' => [
+            'text' => 'My Test Content from element'
+        ]
+    ]
+];
+````
+
+This can be practicalif the parent elements display needs to be aware of it's children. 
+
+**Exemple :** You hava a list of products, in the parent element, and woul like to display them. You can call 
+the children element whose alias is `thumbnail` and display is as many times as necessery. 
+
+```php
+<?php
+foreach ($products as $product) {
+    $this->uiComponents->display($blockDefinition->getSubBlocks()['thumbnail'], $product);
+}
+```
+
 ### Sorting elements
 
 You can change the order of the elements. 
 
-// TODO not coded yet. 
+> TODO not coded yet. It's not priority as for our usage the sorting will be probably 
+> done when reading the configuration files. 
 
 ## TODO
 
+* [ ] Test some more with complex layouts.
 * [ ] We are missing priorities for different components in the same parent. 
-* [ ] The config merging of blocks is surely not correct, needs to be checked. 
-* [ ] Improve memory : Currently all block definitions are loaded at once, should be loaded as needed. 
-* [ ] Improve memory : Currently all ui Components are created from start, should use callables like for block definitions.
-* [ ] Test, Test & Some unit tests. 
