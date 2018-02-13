@@ -60,7 +60,7 @@ class BlockDefinition implements BlockDefinitionInterface
     /**
      * @return string Get unique key defining the interfaces.
      */
-    public function geyUniqueKey(): string
+    public function getUniqueKey(): string
     {
         return $this->key;
     }
@@ -78,7 +78,7 @@ class BlockDefinition implements BlockDefinitionInterface
      */
     public function getParentKey(): string
     {
-        return $this->key;
+        return $this->parent;
     }
 
     /**

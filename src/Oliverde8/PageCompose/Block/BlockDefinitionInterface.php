@@ -16,7 +16,7 @@ interface BlockDefinitionInterface
     /**
      * @return string Get unique key defining the interfaces.
      */
-    public function geyUniqueKey() : string;
+    public function getUniqueKey() : string;
 
     /**
      * @return string

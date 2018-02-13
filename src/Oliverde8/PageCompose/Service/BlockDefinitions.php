@@ -2,6 +2,7 @@
 
 namespace Oliverde8\PageCompose\Service;
 
+use oliverde8\AssociativeArraySimplified\AssociativeArray;
 use Oliverde8\PageCompose\Block\BlockDefinition;
 use Oliverde8\PageCompose\Block\BlockDefinitionInterface;
 use Psr\SimpleCache\CacheInterface;
@@ -102,7 +103,6 @@ class BlockDefinitions
         $originalBloc = isset($this->blocks[$blockKey]) ? $this->blocks[$blockKey] : [];
         $block = $originalBloc + $block;
 
-        // TODO validate minimal information!
         if (isset($block['parent'])) {
             $this->blocks[$block['parent']][$blockKey] = $block;
         } else {
@@ -128,7 +128,8 @@ class BlockDefinitions
 
         $subBlocks = [];
         foreach ($this->blocks[$parentBlockKey] as $blockKey => $block) {
-            $subBlocks[$blockKey] = $this->buildBlock($blockKey, $block, $parentBlockKey, $globalConfig);
+            $alias = AssociativeArray::getFromKey($block, 'alias', $blockKey);
+            $subBlocks[$alias] = $this->buildBlock($blockKey, $block, $parentBlockKey, $globalConfig);
         }
 
         return $subBlocks;
@@ -147,26 +148,29 @@ class BlockDefinitions
     protected function buildBlock($blockKey, $block, $parentBlocKey, $parentGlobalConfig)
     {
         // Merge parent config into the main config.
-        $config = isset($block['config']) ? $block['config'] : [];
+        $config = AssociativeArray::getFromKey($block, 'config', []);
         $config = $parentGlobalConfig + $config;
 
         // Merge both configs.
-        $globalConfig = isset($block['globalConfig']) ? $block['globalConfig'] : [];
+        $globalConfig = AssociativeArray::getFromKey($block, 'globalConfig', []);
         $globalConfig = $parentGlobalConfig + $globalConfig;
+
+        // Define empty list of sub blocks.
+        $subBlocks = [];
 
         // Allow definition to extend another definition.
         if (isset($block['extends'])) {
-            $extendedBlock = $this->abstractblocks[$block]['extends'];
-            $config = (isset($extendedBlock['config']) ? $extendedBlock['config'] : []) + $config;
-            $globalConfig = (isset($extendedBlock['globalConfig']) ? $extendedBlock['globalConfig'] : []) + $globalConfig;
+            $extendedBlock = $this->abstractblocks[$block['extends']];
 
-            if (isset($extendedBlock['component']) && !isset($block['component'])) {
-                $block['component'] = $extendedBlock['component'];
-            }
+            $config = array_merge_recursive(AssociativeArray::getFromKey($extendedBlock, 'config', []), $config);
+            $globalConfig = array_merge_recursive(AssociativeArray::getFromKey($extendedBlock, 'globalConfig', []), $globalConfig);
+            $block['component'] = AssociativeArray::getFromKey($block, 'component', $extendedBlock['component']);
+
+            $subBlocks = $this->buildBlocks($block['extends'], $globalConfig);
         }
 
         // fetch sub blocks.
-        $subBlocks = $this->buildBlocks($blockKey, $globalConfig);
+        $subBlocks = $subBlocks + $this->buildBlocks($blockKey, $globalConfig);
 
         // Fetch block definition.
         return new BlockDefinition(
