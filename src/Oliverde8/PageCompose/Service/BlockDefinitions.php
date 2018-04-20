@@ -66,7 +66,7 @@ class BlockDefinitions
                 $blocks = unserialize($blocks);
             } else {
                 $blocks = $this->buildBlocks($pageKey, $globalConfig);
-                $this->cache->set($this->cacheSuffix . $pageKey, serialize($blocks));
+                $this->cache->set($this->cacheSuffix . $pageKey, $blocks);
             }
 
             $this->blockDefinitions[$pageKey] = $blocks;
@@ -85,9 +85,14 @@ class BlockDefinitions
         }
 
         $this->blocks = [];
-        foreach ($this->buildFactories as $buildFactory) {
-            foreach ($buildFactory() as $blocKey => $block) {
-                $this->registerBlock($blocKey, $block);
+        foreach ($this->buildFactories as $key => $buildFactory) {
+            if (is_callable($buildFactory)) {
+                foreach ($buildFactory() as $blocKey => $block) {
+                    $this->registerBlock($blocKey, $block);
+                }
+            }
+            else {
+                $this->registerBlock($key, $buildFactory);
             }
         }
     }
@@ -101,6 +106,7 @@ class BlockDefinitions
     protected function registerBlock($blockKey, $block)
     {
         $originalBloc = isset($this->blocks[$blockKey]) ? $this->blocks[$blockKey] : [];
+
         $block = $originalBloc + $block;
 
         if (isset($block['parent'])) {
