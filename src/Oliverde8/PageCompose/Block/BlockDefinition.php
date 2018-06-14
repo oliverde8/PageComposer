@@ -30,6 +30,9 @@ class BlockDefinition implements BlockDefinitionInterface
     /** @var array */
     protected $globalConfiguration;
 
+    /** @var array */
+    protected $data;
+
     /**
      * BlockDefinition constructor.
      *
@@ -105,5 +108,31 @@ class BlockDefinition implements BlockDefinitionInterface
     public function getGlobalConfiguration(): array
     {
         return $this->globalConfiguration;
+    }
+
+    /**
+     * Set data to be shared between prepare & display.
+     *
+     * @param $key
+     * @param $value
+     *
+     * @return $this
+     */
+    public function setData($key, $value)
+    {
+        $this->data[$key] = $value;
+        return $this;
+    }
+
+    /**
+     * Get shared data between prepare & display.
+     *
+     * @param $key
+     *
+     * @return mixed
+     */
+    public function getData($key)
+    {
+        return isset($this->data[$key]) ? $this->data[$key] : null;
     }
 }

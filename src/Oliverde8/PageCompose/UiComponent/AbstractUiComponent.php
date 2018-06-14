@@ -2,6 +2,7 @@
 
 namespace Oliverde8\PageCompose\UiComponent;
 
+use function GuzzleHttp\Promise\all;
 use Oliverde8\PageCompose\Block\BlockDefinitionInterface;
 use Oliverde8\PageCompose\Service\UiComponents;
 
@@ -33,8 +34,15 @@ abstract class AbstractUiComponent implements UiComponentInterface
      */
     public function prepare(BlockDefinitionInterface $blockDefinition, ...$args)
     {
+        $promises = [];
         foreach ($blockDefinition->getSubBlocks() as $block) {
-            $this->uiComponents->prepare($block, ...$args);
+            $promise = $this->uiComponents->prepare($block, ...$args);
+
+            if ($promise) {
+                $promises[] = $promise;
+            }
         }
+
+        return all($promises);
     }
 }

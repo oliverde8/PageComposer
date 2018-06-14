@@ -66,8 +66,8 @@ class UiComponentsTest extends TestCase
 
         $uiComponent2 = new TextUiComponent($this->uiComponents);
 
-        $blockDefinition1 = new BlockDefinition('test', 'text', 'test', [], [], []);
-        $blockDefinition2 = new BlockDefinition('test', 'text2', 'test', [$blockDefinition1], [], []);
+        $blockDefinition1 = new BlockDefinition('test', 'text', 'test', [], ['text' => ''], []);
+        $blockDefinition2 = new BlockDefinition('test', 'text2', 'test', [$blockDefinition1], ['text' => ''], []);
 
         $this->uiComponents->registerUiComponent('text', $uiComponent1);
         $this->uiComponents->registerUiComponent('text2', $uiComponent2);
@@ -77,14 +77,36 @@ class UiComponentsTest extends TestCase
 
     public function testDisplay()
     {
+        $uiComponent = new TextUiComponent($this->uiComponents);
+        $this->uiComponents->registerUiComponent('text', $uiComponent);
+
         $blockDefinition = new BlockDefinition('test', 'text', 'test', [], ['text' => 'Test text'], []);
 
-        $uiComponent = new TextUiComponent($this->uiComponents);
+        // Prepare everything and wait for it.
+        $this->uiComponents->prepare($blockDefinition, [])->wait();
 
-        $this->uiComponents->registerUiComponent('text', $uiComponent);
         $this->assertEquals('Test text', $this->uiComponents->display($blockDefinition));
     }
 
+    public function testWithPromise()
+    {
+        $client = new \GuzzleHttp\Client(['base_uri' => 'http://www.mocky.io/']);
+        $httpPromise = $client->getAsync('v2/5b225f282e00006500e31672')->then(function (\GuzzleHttp\Psr7\Response $value) {
+            echo "Http actually finishes now!\n";
+            return $value->getBody();
+        });
+
+        $uiComponent = new TextUiComponent($this->uiComponents);
+        $this->uiComponents->registerUiComponent('text', $uiComponent);
+
+        $blockDefinition = new BlockDefinition('test', 'text', 'test', [], ['text' => $httpPromise], []);
+
+        // Prepare everything and wait for it.
+        $this->uiComponents->prepare($blockDefinition, [])->wait();
+
+        $this->assertEquals('This is my http test', $this->uiComponents->display($blockDefinition));
+    }
+    
     public function testDisplayInvalid()
     {
         $blockDefinition = new BlockDefinition('test', 'text', 'test', [], [], []);

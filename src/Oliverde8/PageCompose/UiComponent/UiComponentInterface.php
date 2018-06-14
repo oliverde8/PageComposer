@@ -2,6 +2,7 @@
 
 namespace Oliverde8\PageCompose\UiComponent;
 
+use GuzzleHttp\Promise\PromiseInterface;
 use Oliverde8\PageCompose\Block\BlockDefinitionInterface;
 
 /**
@@ -20,7 +21,7 @@ interface UiComponentInterface
      * @param BlockDefinitionInterface $blockDefinition
      * @param array ...$args
      *
-     * @return mixed
+     * @return PromiseInterface
      */
     public function prepare(BlockDefinitionInterface $blockDefinition, ...$args);
 

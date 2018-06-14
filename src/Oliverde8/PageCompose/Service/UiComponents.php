@@ -2,6 +2,8 @@
 
 namespace Oliverde8\PageCompose\Service;
 
+use GuzzleHttp\Promise\Promise;
+use GuzzleHttp\Promise\PromiseInterface;
 use Oliverde8\PageCompose\Block\BlockDefinitionInterface;
 use Oliverde8\PageCompose\UiComponent\UiComponentInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -43,16 +45,27 @@ class UiComponents
      *
      * @param BlockDefinitionInterface $blockDefinition
      * @param array ...$args
+     *
+     * @return PromiseInterface
      */
     public function prepare(BlockDefinitionInterface $blockDefinition, ...$args)
     {
         if (!isset($this->uiComponents[$blockDefinition->getUiComponentName()])) {
-            return;
+            return new Promise();
         }
 
         $this->dispatchEvent('prepare.before', $blockDefinition);
-        $this->uiComponents[$blockDefinition->getUiComponentName()]->prepare($blockDefinition, ...$args);
-        $this->dispatchEvent('prepare.after', $blockDefinition);
+        $promise = $this->uiComponents[$blockDefinition->getUiComponentName()]->prepare($blockDefinition, ...$args);
+
+        $that = $this;
+        if (!$promise) {
+            $promise = new Promise();
+        }
+        $promise->then(function() use ($that, $blockDefinition) {
+            $that->dispatchEvent('prepare.after', $blockDefinition);
+        });
+
+        return $promise;
     }
 
     /**

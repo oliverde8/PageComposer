@@ -14,10 +14,13 @@
     "oliverde8/associative-array-simplified" : "1.0.*",
     "symfony/property-access" : "3.4.*|3.3.*",
     "psr/simple-cache" : "*",
-    "psr/cache" : "*"
+    "psr/cache" : "*",
+    "guzzlehttp/promises": "1.3.*"
   },
   "require-dev": {
-    "phpunit/phpunit": "6.5.*"
+    "phpunit/phpunit": "6.5.*",
+    "guzzlehttp/guzzle": "^6.3",
+    "symfony/cache": "3.4.*|3.3.*"
   },
   "autoload": {
     "psr-4": {

@@ -81,8 +81,6 @@ abstract class AbstractHtml extends AbstractUiComponent
             return '';
         }
 
-        var_dump($property);
-
         return implode(
             ' ',
             array_map(

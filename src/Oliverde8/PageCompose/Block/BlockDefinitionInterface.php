@@ -48,4 +48,23 @@ interface BlockDefinitionInterface
      * @return array
      */
     public function getGlobalConfiguration();
+
+    /**
+     * Set data to be shared between prepare & display.
+     *
+     * @param $key
+     * @param $value
+     *
+     * @return $this
+     */
+    public function setData($key, $value);
+
+    /**
+     * Get shared data between prepare & display.
+     *
+     * @param $key
+     *
+     * @return mixed
+     */
+    public function getData($key);
 }
