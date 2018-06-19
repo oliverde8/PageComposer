@@ -132,7 +132,12 @@ class BlockDefinitions
             return [];
         }
 
+        // Fetch blocks for extended block first.
         $subBlocks = [];
+        if (isset($this->abstractblocks[$parentBlockKey]) && isset($this->abstractblocks[$parentBlockKey]['extends'])) {
+            $subBlocks = $this->buildBlocks($this->abstractblocks[$parentBlockKey]['extends'], $globalConfig);
+        }
+
         foreach ($this->blocks[$parentBlockKey] as $blockKey => $block) {
             $alias = AssociativeArray::getFromKey($block, 'alias', $blockKey);
             $subBlocks[$alias] = $this->buildBlock($blockKey, $block, $parentBlockKey, $globalConfig);

@@ -1,7 +1,9 @@
 # Page Compose 
 
 Page compose is a library that allows to compose a page with configuration. This allows multiple components 
-to overide the content of a page. 
+to override the content of a page. 
+
+Page compose also supports promises, which will allow you to improve the rendering time of your pages.
 
 The system was inspired by the Layout's of Magento & from the form compose of Akeneo. 
 It is designed to endup being used with eXpansion the Maniaplanet server controller.
@@ -11,6 +13,8 @@ It is designed to endup being used with eXpansion the Maniaplanet server control
 [![Code Coverage](https://scrutinizer-ci.com/g/oliverde8/PageComposer/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/oliverde8/PageComposer/?branch=master)
 
 ## Why
+
+### Extensibility
 
 If you start a symfony project using twig and have multiple bundles overriding your templates it's is 
 going to become a nightmare to manage. 
@@ -27,7 +31,23 @@ The idea of this library is to offer a common ground for configuration based pag
 A Symfony bundle that will be coded later should make it easier to understand. 
 
 This library is not meant to be used on simple websites, it's meant to be used for CMS and other softwares that needs
-to have easily overridable interfaces. This first vesrion is designed for eXpansion which doesen't uses html code. 
+to have easily overridable interfaces. This first version is designed for eXpansion which doesen't uses html code. 
+
+### Decoupling
+
+Today's websites are more and more complicated, one page contains informations that might come from various sources. 
+Having a single controller manage the majority of the data displayed in a page is not an option. 
+
+Page compose allows this to be splitted, each block being self sufficient. 
+
+### Performance
+
+It is hard to imagine today a website that does not require some a call to an API. These calls can be costly and slow 
+down a website. 
+
+These http calls can be done using guzzle promises asynchronously during the `prepare` phase of a block. 
+
+Using the promises other http calls can also be run asynchronously to improve performance.
 
 ## Simple usage exemple 
 
@@ -86,10 +106,33 @@ new \Oliverde8\PageCompose\Service\BlockDefinitions(
 ```
 
 **Step 3**
-We can now display our page. 
+Before displaying the page we must first prepare the page using promises.
 
 ```php
 <?php
+
+$promises = [];
+foreach ($pageBlocks as $blockDefinition) {
+    $promises[] = $uiComponents->prepare($blockDefinition, []);
+}
+```
+
+We now need to wait for all the promises to resolve.
+
+```php
+<?php
+
+$promise = \GuzzleHttp\Promise\all($promises);
+$promise->wait();
+```
+
+**Step 4**
+
+We can now display the content of the page.
+
+```php
+<?php 
+
 foreach ($blockDefinitions->getPageBlocks('myPage', []) as $block) {
     echo $uiComponents->display($block);
 }
@@ -99,6 +142,8 @@ As you can see display doesen't display it retuns a string. That's because the s
 sub children should be handle depends on the usage. My primary usage being to append various objects for eXpansion.
 
 ## What else 
+
+Check our [examples](./exemples).
 
 ### Extending blocks
 
@@ -216,10 +261,10 @@ $layout = [
 ];
 ````
 
-This can be practicalif the parent elements display needs to be aware of it's children. 
+This can be practical if the parent elements display needs to be aware of it's children. 
 
-**Exemple :** You hava a list of products, in the parent element, and woul like to display them. You can call 
-the children element whose alias is `thumbnail` and display is as many times as necessery. 
+**Exemple :** You have a list of products, in the parent element, and would like to display them. You can call 
+the children element whose alias is `thumbnail` and display is as many times as necessary. 
 
 ```php
 <?php
@@ -235,7 +280,15 @@ You can change the order of the elements.
 > TODO not coded yet. It's not priority as for our usage the sorting will be probably 
 > done when reading the configuration files. 
 
+## FAQ
+
+**Why isn't there a yml or xml reader ?**
+It would indeed be much nicer to be able to configure our page structure in a config file. Even better if it was
+a xml file where can can really have a real "tree" view of our page. We do not implement this as it would be easier
+to have this on the application layer, in a symfony bundle for example. 
+
 ## TODO
 
 * [ ] Test some more with complex layouts.
 * [ ] We are missing priorities for different components in the same parent. 
+* [ ] Have a service for handling HTML display as usage at the moment is a bit complicated.
