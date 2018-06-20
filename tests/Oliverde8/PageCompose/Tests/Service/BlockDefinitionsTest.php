@@ -33,11 +33,8 @@ class BlockDefinitionsTest extends TestCase
             [function() use ($blockDefinition) { return $blockDefinition; }]
         );
 
-        $blocks = $blockDefinitions->getPageBlocks('myPage', []);
-
-        $this->assertEquals(count($expected), count($blocks));
-        $this->recursiveTestExpected($blocks, $expected);
-
+        $blocks = $blockDefinitions->getBlock('myPage', []);
+        $this->recursiveTestExpected($blocks->getSubBlocks(), $expected);
     }
 
     public function testCacheUsageHit()
@@ -45,7 +42,7 @@ class BlockDefinitionsTest extends TestCase
         $blockDefinition = new BlockDefinition('test', 'test', 'test', [], [], []);
 
         $dummyCache = $this->getMockBuilder(CacheInterface::class)->getMock();
-        $dummyCache->method('get')->with('mycache.test')->willReturn(serialize($blockDefinition));
+        $dummyCache->method('get')->with('mycache.test')->willReturn($blockDefinition);
 
         $blockDefinitions = new BlockDefinitions(
             $dummyCache,
@@ -53,7 +50,7 @@ class BlockDefinitionsTest extends TestCase
             []
         );
 
-        $this->assertEquals($blockDefinition, $blockDefinitions->getPageBlocks('test', []));
+        $this->assertEquals($blockDefinition, $blockDefinitions->getBlock('test', []));
     }
 
     /**
@@ -82,6 +79,10 @@ class BlockDefinitionsTest extends TestCase
         return [
             'Simple single block' => [
                 [
+                    'myPage' => [
+                        'component' => 'text',
+                        'config' => ['text' => 'test']
+                    ],
                     'myPage/text' => [
                         'parent' => 'myPage',
                         'component' => 'text',
@@ -105,6 +106,10 @@ class BlockDefinitionsTest extends TestCase
             ],
             'Simple double block' => [
                 [
+                    'myPage' => [
+                        'component' => 'text',
+                        'config' => ['text' => 'test']
+                    ],
                     'myPage/text1' => [
                         'parent' => 'myPage',
                         'component' => 'text',
@@ -139,6 +144,10 @@ class BlockDefinitionsTest extends TestCase
             ],
             "With sub blocks" => [
                 [
+                    'myPage' => [
+                        'component' => 'text',
+                        'config' => ['text' => 'test']
+                    ],
                     'myPage/text1' => [
                         'parent' => 'myPage',
                         'component' => 'text',
@@ -187,6 +196,10 @@ class BlockDefinitionsTest extends TestCase
             ],
             "Aliases" => [
                 [
+                    'myPage' => [
+                        'component' => 'text',
+                        'config' => ['text' => 'test']
+                    ],
                     'myPage/text' => [
                         'parent' => 'myPage',
                         'alias' => 'myText',
@@ -208,6 +221,10 @@ class BlockDefinitionsTest extends TestCase
             ],
             "Global config" => [
                 [
+                    'myPage' => [
+                        'component' => 'text',
+                        'config' => ['text' => 'test']
+                    ],
                     'myPage/text' => [
                         'parent' => 'myPage',
                         'component' => 'text',
@@ -237,6 +254,10 @@ class BlockDefinitionsTest extends TestCase
             ],
             "Extend without sub" => [
                 [
+                    'myPage' => [
+                        'component' => 'text',
+                        'config' => ['text' => 'test']
+                    ],
                     'abstract/text' => [
                         'alias' => 'myText',
                         'component' => 'text',
@@ -261,6 +282,10 @@ class BlockDefinitionsTest extends TestCase
             ],
             "Extend with sub" => [
                 [
+                    'myPage' => [
+                        'component' => 'text',
+                        'config' => ['text' => 'test']
+                    ],
                     'abstract/text' => [
                         'component' => 'text',
                         'config' => [

@@ -58,6 +58,7 @@ First we need to define the various Ui Components available. Those are in charge
 <?php
 $uiComponents = new \Oliverde8\PageCompose\Service\UiComponents();
 $uiComponents->registerUiComponent('list', new \Oliverde8\PageCompose\UiComponent\Html\HtmlList($uiComponents));
+$uiComponents->registerUiComponent('container', new \Oliverde8\PageCompose\UiComponent\Html\Container($uiComponents));
 $uiComponents->registerUiComponent('text', new \Oliverde8\PageCompose\UiComponent\TextUiComponent($uiComponents));
 ```
 
@@ -70,6 +71,10 @@ Let's define the content of `myPage`
 ```php
 <?php
 $layout = [
+    'myPage' => [
+        'component' => 'container',
+        'config' => []
+    ],
     'myPage/content' => [
         'parent' => 'myPage',  // The name of our pages.
         'component' => 'list', // The sub blocks will be displayed using the list ui component.
@@ -98,7 +103,7 @@ Now let's create a our Block definitions.
 
 ```php
 <?php
-new \Oliverde8\PageCompose\Service\BlockDefinitions(
+$blockDefinitions = new \Oliverde8\PageCompose\Service\BlockDefinitions(
     new \Symfony\Component\Cache\Simple\ArrayCache(),
     'page_compose',
     [function() use ($layout) { return $layout; }]
@@ -110,19 +115,13 @@ Before displaying the page we must first prepare the page using promises.
 
 ```php
 <?php
-
-$promises = [];
-foreach ($pageBlocks as $blockDefinition) {
-    $promises[] = $uiComponents->prepare($blockDefinition, []);
-}
+$promise = $uiComponents->prepare($blockDefinitions->getBlock('myPage', []), []);
 ```
 
-We now need to wait for all the promises to resolve.
+We now need to wait for the promise to resolve.
 
 ```php
 <?php
-
-$promise = \GuzzleHttp\Promise\all($promises);
 $promise->wait();
 ```
 
@@ -132,13 +131,10 @@ We can now display the content of the page.
 
 ```php
 <?php 
-
-foreach ($blockDefinitions->getPageBlocks('myPage', []) as $block) {
-    echo $uiComponents->display($block);
-}
+echo $uiComponents->display($blockDefinitions->getBlock('myPage', []), []);
 ```
 
-As you can see display doesen't display it retuns a string. That's because the system intends to be generic. The way
+As you can see display does not display it returns a string. That's because the system intends to be generic. The way
 sub children should be handle depends on the usage. My primary usage being to append various objects for eXpansion.
 
 ## What else 
@@ -165,6 +161,10 @@ $layout = [
         'config' => [          
             'text' => 'my Text'
         ],
+    ],
+    'myPage' => [
+        'component' => 'container',
+        'config' => []
     ],
     'myPage/content' => [
         'parent' => 'myPage',  
@@ -193,6 +193,10 @@ You might wish to set some options globally at the parent level for it to be the
 ```php
 <?php
 $layout = [
+    'myPage' => [
+        'component' => 'container',
+        'config' => []
+    ],
     'myPage/content' => [
         'parent' => 'myPage',  
         'component' => 'list', 
@@ -223,9 +227,7 @@ Global configs can also be set when calling for the display.
 **Exemple**
 ```php
 <?php
-foreach ($blockDefinitions->getPageBlocks('myPage', ['text' => 'My Global text']) as $block) {
-    echo $uiComponents->display($block);
-}
+echo $uiComponents->display($blockDefinitions->getBlock('myPage', ['text' => 'My Global text']), []);
 ```
 
 ### Defining aliases. 
@@ -234,6 +236,10 @@ foreach ($blockDefinitions->getPageBlocks('myPage', ['text' => 'My Global text']
 ```php
 <?php
 $layout = [
+    'myPage' => [
+        'component' => 'container',
+        'config' => []
+    ],
     'myPage/content' => [
         'parent' => 'myPage',  
         'component' => 'list', 

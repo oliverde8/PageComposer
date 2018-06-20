@@ -28,11 +28,11 @@ class BlockDefinitions
     /** @var BlockDefinitionInterface[][] */
     protected $blockDefinitions = [];
 
-    /** @var array */
+    /** @var array List of all blocks */
     protected $blocks = null;
 
-    /** @var array */
-    protected $abstractblocks;
+    /** @var array Blocks grouped per parent */
+    protected $blockPerParent = [];
 
     /**
      * BlockDefinitions constructor.
@@ -48,31 +48,35 @@ class BlockDefinitions
         $this->buildFactories = $buildFactories;
     }
 
-
     /**
-     * Get sub blocks of a page
-     *
-     * @param $pageKey
+     * @param $blockKey
      * @param $globalConfig
      *
-     * @return BlockDefinitionInterface[]
-     * @throws
+     * @return null|BlockDefinition
+     * @throws \Psr\SimpleCache\InvalidArgumentException
      */
-    public function getPageBlocks($pageKey, $globalConfig)
+    public function getBlock($blockKey, $globalConfig)
     {
-        if (!array_key_exists($pageKey, $this->blockDefinitions)) {
-            $blocks = $this->cache->get($this->cacheSuffix . $pageKey, null);
-            if (!is_null($blocks)) {
-                $blocks = unserialize($blocks);
-            } else {
-                $blocks = $this->buildBlocks($pageKey, $globalConfig);
-                $this->cache->set($this->cacheSuffix . $pageKey, $blocks);
-            }
-
-            $this->blockDefinitions[$pageKey] = $blocks;
+        // Check caches first.
+        $cacheKey = $this->normalizeCacheKey($blockKey);
+        $cachedBlock = $this->cache->get($cacheKey, null);
+        if (!is_null($cachedBlock)) {
+            return $cachedBlock;
         }
 
-        return $this->blockDefinitions[$pageKey];
+        // Initialize blocks only when the cache can't help us.
+        $this->init();
+
+        // Check if the block can be built.
+        if (!isset($this->blocks[$blockKey])) {
+            return null;
+        }
+
+        // Build the block definition object.
+        $block = $this->buildBlock($blockKey, $this->blocks[$blockKey], null, $globalConfig);
+        $this->cache->set($cacheKey, $block);
+
+        return $block;
     }
 
     /**
@@ -105,14 +109,19 @@ class BlockDefinitions
      */
     protected function registerBlock($blockKey, $block)
     {
-        $originalBloc = isset($this->blocks[$blockKey]) ? $this->blocks[$blockKey] : [];
+        $originalBlock = isset($this->blocks[$blockKey]) ? $this->blocks[$blockKey] : [];
 
-        $block = $originalBloc + $block;
+        // TODO add some more options to have a more "intelligent" replacement of existing block configs..
+        $block = $originalBlock + $block;
+        $this->blocks[$blockKey] = $block;
+
+        // Check if block was moved, remove from old parent if it's the case.
+        if (isset($originalBlock['parent']) && $originalBlock['parent'] != $block['parent']) {
+            unset($this->blockPerParent[$originalBlock['parent']][$blockKey]);
+        }
 
         if (isset($block['parent'])) {
-            $this->blocks[$block['parent']][$blockKey] = $block;
-        } else {
-            $this->abstractblocks[$blockKey] = $block;
+            $this->blockPerParent[$block['parent']][$blockKey] = $block;
         }
     }
 
@@ -128,17 +137,11 @@ class BlockDefinitions
     {
         $this->init();
 
-        if (!isset($this->blocks[$parentBlockKey])) {
+        if (!isset($this->blockPerParent[$parentBlockKey])) {
             return [];
         }
 
-        // Fetch blocks for extended block first.
-        $subBlocks = [];
-        if (isset($this->abstractblocks[$parentBlockKey]) && isset($this->abstractblocks[$parentBlockKey]['extends'])) {
-            $subBlocks = $this->buildBlocks($this->abstractblocks[$parentBlockKey]['extends'], $globalConfig);
-        }
-
-        foreach ($this->blocks[$parentBlockKey] as $blockKey => $block) {
+        foreach ($this->blockPerParent[$parentBlockKey] as $blockKey => $block) {
             $alias = AssociativeArray::getFromKey($block, 'alias', $blockKey);
             $subBlocks[$alias] = $this->buildBlock($blockKey, $block, $parentBlockKey, $globalConfig);
         }
@@ -170,8 +173,8 @@ class BlockDefinitions
         $subBlocks = [];
 
         // Allow definition to extend another definition.
-        if (isset($block['extends'])) {
-            $extendedBlock = $this->abstractblocks[$block['extends']];
+        if (isset($block['extends']) && !empty($block['extends'])) {
+            $extendedBlock = $this->blocks[$block['extends']];
 
             $config = array_merge_recursive(AssociativeArray::getFromKey($extendedBlock, 'config', []), $config);
             $globalConfig = array_merge_recursive(AssociativeArray::getFromKey($extendedBlock, 'globalConfig', []), $globalConfig);
@@ -192,5 +195,10 @@ class BlockDefinitions
             $config,
             $globalConfig
         );
+    }
+
+    protected function normalizeCacheKey($blockKey)
+    {
+        return str_replace(['{', '}', '(', ')', '/', '\\', '@'], '_', $this->cacheSuffix . $blockKey);
     }
 }

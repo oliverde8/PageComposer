@@ -92,7 +92,6 @@ class UiComponentsTest extends TestCase
     {
         $client = new \GuzzleHttp\Client(['base_uri' => 'http://www.mocky.io/']);
         $httpPromise = $client->getAsync('v2/5b225f282e00006500e31672')->then(function (\GuzzleHttp\Psr7\Response $value) {
-            echo "Http actually finishes now!\n";
             return $value->getBody();
         });
 

@@ -46,7 +46,7 @@ class BlockDefinition implements BlockDefinitionInterface
     public function __construct(
         string $key,
         string $uiComponent,
-        string $parent,
+        $parent,
         array $subBlocks,
         array $configuration,
         array $globalConfiguration)

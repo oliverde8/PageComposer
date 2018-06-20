@@ -24,6 +24,10 @@ $blockDefinitions = new \Oliverde8\PageCompose\Service\BlockDefinitions(
     [
         function() use ($client) {
             return [
+                'myPage' => [
+                    'component' => 'container',
+                    'config' => [],
+                ],
                 'myPage/list' => [
                     'parent' => 'myPage',
                     'component' => 'list',
@@ -66,25 +70,19 @@ $blockDefinitions = new \Oliverde8\PageCompose\Service\BlockDefinitions(
 $uiComponents = new \Oliverde8\PageCompose\Service\UiComponents();
 $uiComponents->registerUiComponent('list', new \Oliverde8\PageCompose\UiComponent\Html\HtmlList($uiComponents));
 $uiComponents->registerUiComponent('text', new \Oliverde8\PageCompose\UiComponent\TextUiComponent($uiComponents));
+$uiComponents->registerUiComponent('container', new \Oliverde8\PageCompose\UiComponent\Html\Container($uiComponents));
 
 
-$pageBlocks = $blockDefinitions->getPageBlocks('myPage', []);
-$promises = [];
-
-foreach ($pageBlocks as $blockDefinition) {
-    $promises[] = $uiComponents->prepare($blockDefinition, []);
-}
+$pageBlock = $blockDefinitions->getBlock('myPage', []);
+$promise = $uiComponents->prepare($pageBlock);
 
 echo "Http responses are not ready, but they are running\n";
 
-$promise = \GuzzleHttp\Promise\all($promises);
 $promise->wait();
 
 echo "Blocks have been prepared ready to be displayed\n\n";
 echo "Content : \n\n";
 
-foreach ($pageBlocks as $blockDefinition) {
-    echo $uiComponents->display($blockDefinition, []);
-}
+echo $uiComponents->display($pageBlock, []);
 
 echo "\n\n";
