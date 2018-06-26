@@ -316,6 +316,46 @@ class BlockDefinitionsTest extends TestCase
                     ]
                 ]
             ],
+            "Extend subs" => [
+                [
+                    'myPage' => [
+                        'component' => 'text',
+                        'config' => ['text' => 'test']
+                    ],
+                    'abstract/text' => [
+                        'parent' => 'myPage',
+                        'component' => 'text',
+                        'config' => [
+                            'text' => 'test'
+                        ]
+                    ],
+                    'myPage/text' => [
+                        'parent' => 'myPage',
+                        'extends' => 'abstract/text',
+                    ],
+                    'myPage/text/sub_text' => [
+                        'parent' => 'myPage/text',
+                        'component' => 'text',
+                        'config' => [
+                            'text' => 'test'
+                        ]
+                    ],
+                ],
+                [
+                    'myPage/text' => [
+                        'subs' => [
+                            'myPage/text/sub_text' => [
+                                'UiComponentName' => 'text',
+                                'configuration' => ['text' => 'test']
+                            ]
+                        ],
+                        'UiComponentName' => 'text',
+                        'configuration' => [
+                            'text' => 'test'
+                        ]
+                    ]
+                ]
+            ],
         ];
     }
 }

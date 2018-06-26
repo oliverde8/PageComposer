@@ -184,7 +184,7 @@ class BlockDefinitions
         }
 
         // fetch sub blocks.
-        $subBlocks = $subBlocks + $this->buildBlocks($blockKey, $globalConfig);
+        $subBlocks = $this->buildBlocks($blockKey, $globalConfig) + $subBlocks;
 
         // Fetch block definition.
         return new BlockDefinition(
